@@ -119,6 +119,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
                 V oldValue = node.value;
                 node.key = key;
                 node.value = value;
+                node.hashCode = h1;
                 return oldValue;
             }
 
@@ -220,10 +221,11 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
 
         // 度为 2 的节点
         if (node.hasTwoChildren()) {
-            // 找后继节点
+            // 找后继节点,覆盖
             Node<K,V> s = successor(node);
             node.key = s.key;
             node.value = s.value;
+            node.hashCode = s.hashCode; // hashCode 也要覆盖, 因为 key 变了, hashCode 也变了, 要对应上
             node = s;
         }
 
