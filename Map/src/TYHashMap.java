@@ -65,7 +65,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
         // 处理根节点为空的情况
         if (root == null) {
             // 创建根结点
-            root = new Node<>(key, value, null);
+            root = createNode(key, value, null);
             // 放入数组中
             table[index] = root;
             size++;
@@ -131,7 +131,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
 
         } while (node != null);
 
-        Node<K,V> newNode = new Node<>(key,value,parent);
+        Node<K,V> newNode = createNode(key, value, parent);
         if (cmp > 0) {
             parent.right = newNode;
         } else {
@@ -315,6 +315,9 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
 
     private V remove(Node<K,V> node) {
         if (node == null) return null;
+
+        Node<K,V> twoChildrenNode = node;
+
         size--;
 
         V oldValue = node.value;
@@ -365,11 +368,14 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
             afterRemove(node, null);
         }
 
+        // 交给子类处理删除操作
+        subAfterRemove(twoChildrenNode, node);
+
         return oldValue;
 
     }
 
-    protected void afterRemove(Node<K,V> node, Node<K,V> replacement) {
+    private void afterRemove(Node<K,V> node, Node<K,V> replacement) {
 
         // 1. 如果删除的节点是红色, 不处理
         if (isRED(node)) return;
@@ -470,6 +476,10 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
             }
 
         }
+
+    }
+
+    protected void subAfterRemove(Node<K,V> twoChildrenNode, Node<K,V> removeNode) {
 
     }
 
@@ -605,8 +615,11 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
         return null;
     }
 
+    protected Node<K,V> createNode(K key, V value, Node<K,V> parent) {
+        return new Node<>(key, value, parent);
+    }
 
-    private static class Node<K,V> {
+    protected static class Node<K,V> {
         int hashCode;   // 防止后面用到时重复计算. 搞个属性存一下
         K key;
         V value;
@@ -698,7 +711,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
      * 左旋转
      * @param grand 节点
      */
-    protected void rotateLeft(Node<K,V> grand) {
+    private void rotateLeft(Node<K,V> grand) {
         // 找到 parent 节点, 能来到这, 说明 parent 是 grand 的左子树
         Node<K,V> parent = grand.left;
         Node<K,V> child = parent.left;
@@ -715,7 +728,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
      * 右旋转
      * @param grand 节点
      */
-    protected void rotateRight(Node<K,V> grand) {
+    private void rotateRight(Node<K,V> grand) {
 
         Node<K,V> parent = grand.left;
         Node<K,V> child = parent.right;
@@ -727,7 +740,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
 
     }
 
-    protected void afterRotate(Node<K,V> grand, Node<K,V> parent, Node<K,V> child) {
+    private void afterRotate(Node<K,V> grand, Node<K,V> parent, Node<K,V> child) {
         // 让 parent 成为子树的根节点
         parent.parent = grand.parent;
         if (grand.isLeftChild()) {
@@ -796,7 +809,7 @@ public class TYHashMap<K, V> implements TYMap<K, V> {
 
     // 后继节点: [中序遍历]时,当前节点的后一个节点
     // 和找前驱相反
-    protected Node<K,V> successor(Node<K,V> node) {
+    private Node<K,V> successor(Node<K,V> node) {
         if (node == null) return node;
         Node<K,V> s = node.right;
         if (s != null) {
